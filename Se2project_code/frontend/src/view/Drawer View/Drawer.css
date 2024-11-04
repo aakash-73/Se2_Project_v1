@@ -1,0 +1,45 @@
+/* Drawer.css */
+.drawer {
+  position: fixed;
+  top: 0;
+  left: -250px;
+  width: 250px;
+  height: 100%;
+  background-color: #f8f9fa;
+  box-shadow: 2px 0px 5px rgba(0, 0, 0, 0.5);
+  transition: left 0.3s ease;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.drawer.open {
+  left: 0;
+}
+
+.drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #333;
+}
+
+.list-group-item {
+  cursor: pointer;
+  padding: 10px;
+  border: none;
+  color: #007bff;
+  background-color: transparent;
+  transition: background-color 0.2s;
+}
+
+.list-group-item:hover {
+  background-color: #e9ecef;
+}

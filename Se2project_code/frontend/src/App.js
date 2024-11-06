@@ -13,6 +13,7 @@ import EditPDF from './view/PDF View/EditPDF';
 import DeletePDF from './view/PDF View/DeletePDF';
 import Drawer from './view/Drawer View/Drawer';
 import UserList from './view/User View/UserList';
+import PDFchat from './view/Chat View/PDFchat';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -95,7 +96,11 @@ function App() {
     setIsDrawerOpen(false);
   };
 
-  const returnToAdminView = () => setAdminView(null);
+  const returnToAdminView = () => {
+    if (isUserListView) {
+      setAdminView(null); // Reset to main professor view if in an admin-specific view
+    }
+  };
 
   const renderContent = () => {
     if (adminView === 'userList') {
@@ -121,9 +126,12 @@ function App() {
           <button onClick={handleSignOut} className="btn btn-danger mb-4 float-right">Sign Out</button>
 
           {userType.includes('professor') && viewAsStudent ? (
-            <button onClick={toggleViewMode} className="btn btn-info mb-4 float-right me-2">
-              View as Faculty
-            </button>
+            <>
+              <button onClick={toggleViewMode} className="btn btn-success mb-4 float-right me-2">
+                View as Faculty
+              </button>
+              <PDFchat username={username} /> {/* Pass the username to PDFchat for filtering */}
+            </>
           ) : userType.includes('professor') && !viewAsStudent ? (
             <>
               <button onClick={toggleViewMode} className="btn btn-info mb-4 float-right me-2">View as Student</button>
@@ -142,19 +150,33 @@ function App() {
               />
             </>
           ) : (
-            <>
-              <p className="text-center">You are logged in as a student.</p>
-              <SyllabusList
-                key={listKey}
-                syllabi={syllabi}
-                onView={(pdfId) => setSelectedPdf(pdfId)}
-              />
-            </>
+            <PDFchat /> // Standard student view with PDFchat
           )}
         </>
       );
     }
   };
+
+  // Determine drawer options based on user type and view mode
+  const drawerOptions = (() => {
+    if (userType === 'professor & admin') {
+      return [
+        { label: 'Upload Log', value: 'uploadLog' },
+        { label: 'Student View Log', value: 'studentViewLog' },
+        { label: 'User List', value: 'userList' },
+        { label: 'Registration Requests', value: 'registrationRequests' }
+      ];
+    } else if (userType.includes('professor')) {
+      return viewAsStudent
+        ? [{ label: 'Student View Log', value: 'studentViewLog' }, { label: 'Upload Log', value: 'uploadLog' }]
+        : [{ label: 'Upload Log', value: 'uploadLog' }, { label: 'Student View Log', value: 'studentViewLog' }];
+    } else {
+      return [
+        { label: 'Previous Chats', value: 'previousChats' },
+        { label: 'Searched Courses History', value: 'searchedCoursesHistory' }
+      ];
+    }
+  })();
 
   return (
     <div className="container mt-5">
@@ -171,15 +193,13 @@ function App() {
         )
       ) : (
         <>
-          {userType === 'professor & admin' && (
-            <button
-              onClick={isUserListView ? returnToAdminView : () => setIsDrawerOpen(true)}
-              className="btn btn-outline-secondary mb-4 me-2"
-              style={{ position: 'absolute', left: '10px', top: '10px' }}
-            >
-              {isUserListView ? <i className="fas fa-reply"></i> : '≡'}
-            </button>
-          )}
+          <button
+            onClick={isUserListView ? returnToAdminView : () => setIsDrawerOpen(true)}
+            className="btn btn-outline-secondary mb-4 me-2"
+            style={{ position: 'absolute', left: '10px', top: '10px' }}
+          >
+            {isUserListView ? <i className="fas fa-reply"></i> : '≡'}
+          </button>
 
           {renderContent()}
         </>
@@ -188,9 +208,13 @@ function App() {
       {pdfToEdit && <EditPDF pdfId={pdfToEdit} handleClose={() => setPdfToEdit(null)} onUpdateSuccess={fetchSyllabi} />}
       {pdfToDelete && <DeletePDF pdfId={pdfToDelete} handleClose={() => setPdfToDelete(null)} onDeleteSuccess={fetchSyllabi} />}
 
-      {userType === 'professor & admin' && !viewAsStudent && (
-        <Drawer isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} onOptionSelect={handleOptionSelect} />
-      )}
+      <Drawer
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        onOptionSelect={handleOptionSelect}
+        email={username}
+        options={drawerOptions}
+      />
     </div>
   );
 }

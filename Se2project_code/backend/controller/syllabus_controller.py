@@ -5,20 +5,15 @@ from bson import ObjectId
 from model.syllabus import Syllabus
 
 def allowed_file(filename):
-    """Check if the uploaded file is a PDF."""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() == 'pdf'
 
 def add_syllabus():
     """Add a new syllabus and store the PDF file in GridFS."""
     try:
-        print("Session data in add_syllabus:", dict(session))  # Debug log
-
-        # Get the username from the session
         username = session.get('username')
         if not username:
             return jsonify({"error": "User is not logged in"}), 401
 
-        # Retrieve form data
         course_id = request.form.get('course_id')
         course_name = request.form.get('course_name')
         department_id = request.form.get('department_id')
@@ -26,14 +21,11 @@ def add_syllabus():
         syllabus_description = request.form.get('syllabus_description')
         file = request.files.get('syllabus_pdf')
 
-        # Check if all required fields and file are present
         if not (course_id and course_name and department_id and department_name and syllabus_description and file and allowed_file(file.filename)):
             return jsonify({"error": "All fields are required, and the file must be a PDF"}), 400
 
-        # Store the PDF file in GridFS
         pdf_file_id = fs.put(file, filename=file.filename, content_type='application/pdf')
 
-        # Save syllabus data in MongoDB, setting uploaded_by to the logged-in username
         syllabus = Syllabus(
             course_id=course_id,
             course_name=course_name,
@@ -51,17 +43,12 @@ def add_syllabus():
 
 def get_professor_syllabi():
     """Retrieve syllabi uploaded by a specific professor."""
-    username = request.args.get('username') or session.get('username')
-    print(f"Received request to fetch syllabi for username: '{username}'")  # Debug log
+    username = session.get('username')
+    if not username:
+        return jsonify({"error": "User is not logged in"}), 401
 
     try:
-        if username:
-            # Fetch syllabi uploaded by the specified username
-            syllabi = Syllabus.objects(uploaded_by=username)
-        else:
-            # Fetch all syllabi if no username is specified
-            syllabi = Syllabus.objects()
-
+        syllabi = Syllabus.objects(uploaded_by=username)
         syllabus_list = [{
             "course_id": s.course_id,
             "course_name": s.course_name,
@@ -72,11 +59,28 @@ def get_professor_syllabi():
             "syllabus_pdf": s.syllabus_pdf
         } for s in syllabi]
 
-        print("Returning syllabus list:", syllabus_list)  # Debug log
         return jsonify(syllabus_list), 200
 
     except Exception as e:
-        print(f"Error fetching syllabi for {username}: {str(e)}")  # Detailed error log
+        return jsonify({"error": f"Failed to retrieve syllabi: {str(e)}"}), 500
+
+def get_syllabi():
+    """Retrieve all syllabi for students."""
+    try:
+        syllabi = Syllabus.objects()
+        syllabus_list = [{
+            "course_id": s.course_id,
+            "course_name": s.course_name,
+            "department_id": s.department_id,
+            "department_name": s.department_name,
+            "professor": s.uploaded_by,
+            "syllabus_description": s.syllabus_description,
+            "syllabus_pdf": s.syllabus_pdf
+        } for s in syllabi]
+
+        return jsonify(syllabus_list), 200
+
+    except Exception as e:
         return jsonify({"error": f"Failed to retrieve syllabi: {str(e)}"}), 500
 
 def get_pdf_file(pdf_id):

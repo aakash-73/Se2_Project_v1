@@ -14,13 +14,12 @@ const SyllabusList = () => {
   const [pdfToDelete, setPdfToDelete] = useState(null);
 
   useEffect(() => {
-    // Fetch syllabi data for the logged-in user
     const fetchSyllabi = async () => {
       try {
         const response = await axios.get('http://localhost:5000/syllabi', { withCredentials: true });
-        console.log("Fetched syllabi data:", response.data); // Debug log
-        setSyllabi(response.data);  // Set the retrieved data in state
-        setFilteredSyllabi(response.data); // Initially show all syllabi
+        console.log("Fetched syllabi data:", response.data);
+        setSyllabi(response.data);
+        setFilteredSyllabi(response.data);
       } catch (error) {
         console.error("Error fetching syllabi data:", error);
       }
@@ -30,40 +29,37 @@ const SyllabusList = () => {
   }, []);
 
   const handleSearch = () => {
-    // Filter syllabi based on the search query, including department_id
     const filtered = syllabi.filter((item) => 
       item.course_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.course_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.department_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.department_id.toLowerCase().includes(searchQuery.toLowerCase()) // Add department_id to search criteria
+      item.department_id.toLowerCase().includes(searchQuery.toLowerCase())
     );
     setFilteredSyllabi(filtered);
   };
 
   const handleViewPdf = (pdfId) => {
-    setSelectedPdf(pdfId);  // Set the selected PDF ID to display in PdfViewer
+    setSelectedPdf(pdfId);
   };
 
   const handleEdit = (pdfId) => {
-    setPdfToEdit(pdfId);  // Set the selected PDF ID for editing
+    setPdfToEdit(pdfId);
   };
 
   const handleDelete = (pdfId) => {
-    setPdfToDelete(pdfId);  // Set the selected PDF ID for deletion
+    setPdfToDelete(pdfId);
   };
 
   const refreshSyllabusList = async () => {
-    // Function to refresh the list after an edit or delete
     try {
       const response = await axios.get('http://localhost:5000/syllabi', { withCredentials: true });
       setSyllabi(response.data);
-      setFilteredSyllabi(response.data); // Reset the filtered list to the full list
+      setFilteredSyllabi(response.data);
     } catch (error) {
       console.error("Error refreshing syllabi data:", error);
     }
   };
 
-  // Helper function to group syllabi by course name
   const groupSyllabiByCourseName = (syllabiList) => {
     return syllabiList.reduce((acc, syllabus) => {
       const courseName = syllabus.course_name;
@@ -73,7 +69,6 @@ const SyllabusList = () => {
     }, {});
   };
 
-  // Group syllabi for display
   const groupedSyllabi = groupSyllabiByCourseName(filteredSyllabi);
 
   return (
@@ -81,7 +76,7 @@ const SyllabusList = () => {
       <h2 className="mt-4">Uploaded Syllabi</h2>
 
       {/* Search Field */}
-      <div className="input-group mb-3">
+      <div className="mb-3">
         <input
           type="text"
           className="form-control"
@@ -89,13 +84,13 @@ const SyllabusList = () => {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
-        <button className="btn btn-primary" onClick={handleSearch}>
+        <button className="btn btn-primary mt-2" onClick={handleSearch}>
           Search
         </button>
       </div>
 
       {Object.keys(groupedSyllabi).length === 0 ? (
-        <p>No syllabi found.</p> // Message if no data
+        <p>No syllabi found.</p>
       ) : (
         Object.entries(groupedSyllabi).map(([courseName, syllabi]) => (
           <div key={courseName} className="mb-5">
@@ -154,7 +149,7 @@ const SyllabusList = () => {
           pdfId={pdfToEdit}
           handleClose={() => {
             setPdfToEdit(null);
-            refreshSyllabusList();  // Refresh list after edit
+            refreshSyllabusList();
           }}
         />
       )}
@@ -165,7 +160,7 @@ const SyllabusList = () => {
           handleClose={() => setPdfToDelete(null)}
           onDeleteSuccess={() => {
             setPdfToDelete(null);
-            refreshSyllabusList();  // Refresh list after delete
+            refreshSyllabusList();
           }}
         />
       )}

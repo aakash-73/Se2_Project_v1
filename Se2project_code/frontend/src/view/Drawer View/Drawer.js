@@ -1,17 +1,26 @@
 // Drawer.js
 import React from 'react';
-import './Drawer.css'; // Make sure you have this CSS file in your project
+import './Drawer.css';
+import { FaUserCircle } from 'react-icons/fa';
 
-const Drawer = ({ isOpen, onClose, onOptionSelect }) => {
+const Drawer = ({ isOpen, onClose, onOptionSelect, email, options }) => {
   return (
     <div className={`drawer ${isOpen ? 'open' : ''}`}>
       <div className="drawer-header">
-        <h3>Admin Options</h3>
+        <FaUserCircle size={90} className="profile-icon" />
+        <p className="user-email">{email}</p>
         <button onClick={onClose} className="close-button">&times;</button>
       </div>
       <ul className="list-group">
-        <li className="list-group-item" onClick={() => onOptionSelect('userList')}>User List</li>
-        <li className="list-group-item" onClick={() => onOptionSelect('registrationRequests')}>Registration Requests</li>
+        {options.map((option, index) => (
+          <li
+            key={index}
+            className="list-group-item"
+            onClick={() => onOptionSelect(option.value)} // Pass the value to onOptionSelect
+          >
+            {option.label} {/* Display the label here */}
+          </li>
+        ))}
       </ul>
     </div>
   );

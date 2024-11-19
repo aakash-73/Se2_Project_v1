@@ -1,19 +1,37 @@
 import io
+from pdfminer.high_level import extract_text
 from flask import jsonify, request, send_file, session
+from pypdf import PdfReader
 from config import db, fs
+import fitz
 from bson import ObjectId
 from model.syllabus import Syllabus
+from sentence_transformers import SentenceTransformer
+from embedding_utils import generate_embeddings
+from controller.chatbot_controller import CustomMongoDBVectorStore, embedding_model, collection
+import logging
+import numpy as np
+
+# Initialize the embedding model
+embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
+
+# MongoDB collection for embeddings
+embeddings_collection = db["embeddings"]
+
+vector_store = CustomMongoDBVectorStore(collection=collection, embedding_function=embedding_model)
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() == 'pdf'
 
+
 def add_syllabus():
-    """Add a new syllabus and store the PDF file in GridFS."""
+    """Add a new syllabus, extract content, generate embeddings, and store the PDF file in GridFS."""
     try:
         username = session.get('username')
         if not username:
             return jsonify({"error": "User is not logged in"}), 401
 
+        # Get form data
         course_id = request.form.get('course_id')
         course_name = request.form.get('course_name')
         department_id = request.form.get('department_id')
@@ -21,11 +39,26 @@ def add_syllabus():
         syllabus_description = request.form.get('syllabus_description')
         file = request.files.get('syllabus_pdf')
 
-        if not (course_id and course_name and department_id and department_name and syllabus_description and file and allowed_file(file.filename)):
-            return jsonify({"error": "All fields are required, and the file must be a PDF"}), 400
+        # Validate input fields and file type
+        if not (course_id and course_name and department_id and department_name and syllabus_description and file):
+            return jsonify({"error": "All fields are required"}), 400
+        if not allowed_file(file.filename):
+            return jsonify({"error": "The file must be a PDF"}), 400
 
+        # Store PDF file in GridFS
         pdf_file_id = fs.put(file, filename=file.filename, content_type='application/pdf')
 
+        # Extract content from the PDF file
+        pdf_content = extract_pdf_content(pdf_file_id)
+        if not pdf_content:
+            return jsonify({"error": "Failed to extract content from the PDF"}), 500
+
+        # Generate embeddings for the extracted content
+        embeddings = generate_embeddings(pdf_content)
+        if not embeddings:
+            return jsonify({"error": "Failed to generate embeddings for the PDF content"}), 500
+
+        # Save the syllabus information to MongoDB
         syllabus = Syllabus(
             course_id=course_id,
             course_name=course_name,
@@ -36,9 +69,15 @@ def add_syllabus():
             uploaded_by=username
         )
         syllabus.save()
+
+        # Add the document to the MongoDB vector store
+        vector_store.add_document(str(pdf_file_id), pdf_content, embeddings)
+
+        logging.info(f"Syllabus added successfully by user: {username}")
         return jsonify({"message": "Syllabus added successfully!", "pdf_file_id": str(pdf_file_id)}), 201
 
     except Exception as e:
+        logging.error(f"Failed to add syllabus: {str(e)}", exc_info=True)
         return jsonify({"error": f"Failed to add syllabus: {str(e)}"}), 500
 
 def get_professor_syllabi():
@@ -165,3 +204,91 @@ def delete_syllabus(pdf_id):
 
     except Exception as e:
         return jsonify({"error": f"Failed to delete syllabus: {str(e)}"}), 500
+    
+def store_embeddings(pdf_id, sentences, embeddings):
+    """Store embeddings in MongoDB."""
+    for i, embedding in enumerate(embeddings):
+        embeddings_collection.insert_one({
+            "pdf_id": pdf_id,
+            "sentence": sentences[i],
+            "embedding": embedding.tolist()
+        })
+    print("[INFO] Embeddings stored successfully.")
+
+def extract_pdf_content(pdf_id):
+    """Extract text content from the PDF file."""
+    try:
+        print(f"[DEBUG] Received request to extract content for PDF ID: {pdf_id}")
+
+        if not ObjectId.is_valid(pdf_id):
+            print("[ERROR] Invalid PDF ID.")
+            return jsonify({"error": "Invalid PDF ID."}), 400
+
+        try:
+            file_data = fs.get(ObjectId(pdf_id))
+            print("[DEBUG] Successfully retrieved PDF file from GridFS.")
+        except Exception as e:
+            print(f"[ERROR] Error fetching PDF from GridFS: {e}")
+            return jsonify({"error": f"Failed to fetch PDF from database: {str(e)}"}), 500
+
+        if not file_data:
+            print("[ERROR] PDF file not found.")
+            return jsonify({"error": "PDF file not found."}), 404
+
+        pdf_stream = io.BytesIO(file_data.read())
+        print("[DEBUG] PDF file loaded into memory.")
+
+        try:
+            document = fitz.open(stream=pdf_stream, filetype="pdf")
+            text_content = ""
+
+            for page_num in range(len(document)):
+                page = document.load_page(page_num)
+                page_text = page.get_text()
+                if page_text:
+                    text_content += page_text
+                    print(f"[DEBUG] Extracted text from page {page_num + 1}.")
+
+            document.close()
+
+            if not text_content.strip():
+                print("[ERROR] No readable text found in the PDF file.")
+                return jsonify({"error": "No readable text found in the PDF file."}), 400
+
+            print("[DEBUG] PDF content extraction successful.")
+            return jsonify({"content": text_content}), 200
+
+        except Exception as extraction_error:
+            print(f"[ERROR] PDF extraction error using PyMuPDF: {extraction_error}")
+            return jsonify({"error": "Failed to extract PDF content."}), 500
+
+    except Exception as e:
+        print(f"[ERROR] Unexpected error in extract_pdf_content: {e}")
+        return jsonify({"error": "An unexpected error occurred while processing the PDF content."}), 500
+    
+def similarity_search(pdf_id, user_query, top_k=5):
+    """Perform similarity search on stored embeddings."""
+    try:
+        print(f"[DEBUG] Performing similarity search for PDF ID: {pdf_id}")
+
+        # Generate embedding for the user query
+        query_embedding = embedding_model.encode(user_query, convert_to_numpy=True)
+
+        # Retrieve embeddings from MongoDB
+        embeddings = list(embeddings_collection.find({"pdf_id": pdf_id}))
+        scores = []
+
+        for item in embeddings:
+            sentence_embedding = np.array(item["embedding"])
+            score = np.dot(query_embedding, sentence_embedding) / (np.linalg.norm(query_embedding) * np.linalg.norm(sentence_embedding))
+            scores.append((item["sentence"], score))
+
+        # Sort sentences by similarity score
+        top_sentences = sorted(scores, key=lambda x: x[1], reverse=True)[:top_k]
+        context = "\n".join([s[0] for s in top_sentences])
+
+        return context
+
+    except Exception as e:
+        print(f"[ERROR] Similarity search failed: {e}")
+        return None

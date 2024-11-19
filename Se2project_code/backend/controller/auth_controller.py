@@ -37,6 +37,7 @@ def register():
         return jsonify({"message": "User registered successfully!"}), 201
     except Exception as e:
         return jsonify({"error": f"An error occurred: {str(e)}"}), 400
+    
 
 def login():
     identifier = request.json.get('username')  # Can be username or email

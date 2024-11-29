@@ -115,7 +115,7 @@ const EditPDF = ({ pdfId, handleClose, onUpdateSuccess }) => {
                 name="syllabus_description"
                 value={syllabus.syllabus_description || ''}
                 onChange={handleChange}
-                placeholder="Syllabus Description"
+                placeholder="Title and Syllabus Description"
                 className="form-control mb-2"
               />
 

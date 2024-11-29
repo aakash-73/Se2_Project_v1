@@ -23,11 +23,16 @@ app.permanent_session_lifetime = timedelta(days=1)
 # Enable debug-level logging
 logging.basicConfig(level=logging.DEBUG)
 
-# Health check route
 @app.route('/health', methods=['GET'])
 def health_check():
-    logging.debug("[DEBUG] Health check endpoint called.")
-    return jsonify({"status": "ok", "message": "API is running"}), 200
+    groq_ai_status = check_groq_connection()
+
+    status = {
+        "status": "ok",
+        "message": "API is running",
+        "groq_ai_connection": "successful" if groq_ai_status else "failed"
+    }
+    return jsonify(status), 200 if groq_ai_status else 500
 
 # Home route
 @app.route('/')

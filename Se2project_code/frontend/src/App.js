@@ -29,10 +29,10 @@ function App() {
   const [listKey, setListKey] = useState(0);
   const [adminView, setAdminView] = useState(localStorage.getItem('adminView') || null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isGuest, setIsGuest] = useState(false);
 
   const isUserListView = adminView === 'userList' || adminView === 'registrationRequests';
 
-  // Fetch user data from local storage on mount
   useEffect(() => {
     const storedUserType = localStorage.getItem('user_type');
     const storedUsername = localStorage.getItem('username');
@@ -43,7 +43,6 @@ function App() {
     }
   }, []);
 
-  // Fetch syllabi based on user type
   const fetchSyllabi = useCallback(async () => {
     try {
       const endpoint = userType === 'student' ? 'http://localhost:5000/syllabi/all' : 'http://localhost:5000/syllabi';
@@ -54,14 +53,12 @@ function App() {
     }
   }, [userType]);
 
-  // Fetch syllabi whenever login status, userType, or view mode changes
   useEffect(() => {
     if (isLoggedIn) {
       fetchSyllabi();
     }
   }, [isLoggedIn, userType, viewAsStudent, fetchSyllabi]);
 
-  // Persist admin view in local storage
   useEffect(() => {
     if (adminView) {
       localStorage.setItem('adminView', adminView);
@@ -77,6 +74,7 @@ function App() {
     setSyllabi([]);
     setSelectedPdf(null);
     setAdminView(null);
+    setIsGuest(false);
     localStorage.removeItem('username');
     localStorage.removeItem('user_type');
     localStorage.removeItem('adminView');
@@ -96,9 +94,16 @@ function App() {
     setIsDrawerOpen(false);
   };
 
+  const handleGuestLogin = () => {
+    setIsGuest(true);
+    setIsLoggedIn(true);
+    setUserType('guest');
+    setUsername('Guest');
+  };
+
   const returnToAdminView = () => {
     if (isUserListView) {
-      setAdminView(null); // Reset to main professor view if in an admin-specific view
+      setAdminView(null);
     }
   };
 
@@ -121,20 +126,23 @@ function App() {
       return (
         <>
           <h1 className="mt-4 mb-4 text-center">
-            {userType.includes('professor') && !viewAsStudent ? `Welcome Professor ${username}` : 'Welcome to Syllabus ChatBot'}
+            {userType.includes('professor') && !viewAsStudent
+              ? `Welcome Professor ${username}`
+              : 'Welcome to Syllabus ChatBot'}
           </h1>
           <button onClick={handleSignOut} className="btn btn-danger mb-4 float-right">Sign Out</button>
-
           {userType.includes('professor') && viewAsStudent ? (
             <>
               <button onClick={toggleViewMode} className="btn btn-success mb-4 float-right me-2">
                 View as Faculty
               </button>
-              <PDFchat username={username} /> {/* Pass the username to PDFchat for filtering */}
+              <PDFchat username={username} />
             </>
           ) : userType.includes('professor') && !viewAsStudent ? (
             <>
-              <button onClick={toggleViewMode} className="btn btn-info mb-4 float-right me-2">View as Student</button>
+              <button onClick={toggleViewMode} className="btn btn-info mb-4 float-right me-2">
+                View as Student
+              </button>
               <UploadSyllabus
                 syllabus={syllabus}
                 handleChange={(e) => setSyllabus({ ...syllabus, [e.target.name]: e.target.value })}
@@ -150,14 +158,13 @@ function App() {
               />
             </>
           ) : (
-            <PDFchat /> // Standard student view with PDFchat
+            <PDFchat />
           )}
         </>
       );
     }
   };
 
-  // Determine drawer options based on user type and view mode
   const drawerOptions = (() => {
     if (userType === 'professor & admin') {
       return [
@@ -189,6 +196,7 @@ function App() {
             setIsLoggedIn={setIsLoggedIn}
             setUserType={setUserType}
             setUsername={setUsername}
+            setIsGuest={handleGuestLogin}
           />
         )
       ) : (
@@ -200,14 +208,12 @@ function App() {
           >
             {isUserListView ? <i className="fas fa-reply"></i> : '≡'}
           </button>
-
           {renderContent()}
         </>
       )}
       {selectedPdf && <PdfViewer pdfId={selectedPdf} handleClose={() => setSelectedPdf(null)} />}
       {pdfToEdit && <EditPDF pdfId={pdfToEdit} handleClose={() => setPdfToEdit(null)} onUpdateSuccess={fetchSyllabi} />}
       {pdfToDelete && <DeletePDF pdfId={pdfToDelete} handleClose={() => setPdfToDelete(null)} onDeleteSuccess={fetchSyllabi} />}
-
       <Drawer
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}

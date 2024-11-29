@@ -1,8 +1,7 @@
-// Chatbot.js
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const Chatbot = ({ pdfId, pdfContent, onClose }) => {
+const Chatbot = ({ pdfId, pdfContent, onClose, syllabus }) => {
   const [messages, setMessages] = useState([]);
   const [userInput, setUserInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -10,70 +9,59 @@ const Chatbot = ({ pdfId, pdfContent, onClose }) => {
 
   // Function to send user message and get bot response
   const handleSendMessage = async () => {
-    // Check if user input is not empty
     if (userInput.trim()) {
-        // Update message state with user input
-        const newMessages = [...messages, { sender: 'user', text: userInput }];
-        setMessages(newMessages);
-        setUserInput('');
-        setLoading(true);
-        setError(null);
+      const newMessages = [...messages, { sender: 'user', text: userInput }];
+      setMessages(newMessages);
+      setUserInput('');
+      setLoading(true);
+      setError(null);
 
-        try {
-            // Prepare payload for the request
-            const payload = {
-                message: userInput,
-                pdfId,
-                pdfContent,
-            };
-            console.log("[DEBUG] Sending payload to backend:", payload);
+      try {
+        // Prepare payload for the request
+        const payload = { message: userInput, pdfId, pdfContent };
+        console.log("[DEBUG] Sending payload to backend:", payload);
 
-            // Send POST request to the backend
-            const response = await axios.post('http://localhost:5000/chatbot/chat_with_pdf', payload, {
-              withCredentials: true,
-              headers: {
-                  'Content-Type': 'application/json',
-              },
-          });          
+        // Send POST request to the backend
+        const response = await axios.post(
+          'http://localhost:5000/chatbot/chat_with_pdf',
+          payload,
+          {
+            withCredentials: true,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
 
-            // Check response status
-            if (response.status === 200) {
-                const botResponse = response.data.response || 'No response from the bot.';
-                console.log("[DEBUG] Bot response received:", botResponse);
+        // Check response status
+        if (response.status === 200) {
+          const botResponse = response.data.response.replace(/\n/g, '<br />') || 'No response from the bot.';
+          console.log("[DEBUG] Bot response received:", botResponse);
 
-                // Update messages with bot response
-                setMessages((prevMessages) => [
-                    ...prevMessages,
-                    { sender: 'bot', text: botResponse },
-                ]);
-            } else {
-                console.error('[ERROR] Invalid response from backend:', response.data);
-                setError(response.data.error || 'Failed to get a valid response.');
-                alert('Failed to get a valid response from the chatbot. Please try again.');
-            }
-        } catch (error) {
-            // Network error handling
-            console.error('[ERROR] Network error:', error.response?.data || error.message);
-
-            // Handle specific errors like 404 or network issues
-            if (error.response?.status === 404) {
-                setError('Endpoint not found (404). Please check the backend route.');
-                alert('The chatbot service is currently unavailable. Please try again later.');
-            } else if (error.code === 'ERR_NETWORK') {
-                setError('Network error. Please check your internet connection.');
-                alert('Network error occurred. Please check your connection and try again.');
-            } else {
-                setError('An unexpected error occurred.');
-                alert('An unexpected error occurred. Please try again.');
-            }
-        } finally {
-            // Reset loading state
-            setLoading(false);
+          // Update messages with bot response
+          setMessages((prevMessages) => [
+            ...prevMessages,
+            { sender: 'bot', text: botResponse },
+          ]);
+        } else {
+          setError(response.data.error || 'Failed to get a valid response.');
+          alert('Failed to get a valid response from the chatbot. Please try again.');
         }
+      } catch (error) {
+        console.error('[ERROR] Network error:', error.response?.data || error.message);
+        if (error.response?.status === 404) {
+          setError('Endpoint not found (404). Please check the backend route.');
+        } else if (error.code === 'ERR_NETWORK') {
+          setError('Network error. Please check your internet connection.');
+        } else {
+          setError('An unexpected error occurred.');
+        }
+        alert('An error occurred. Please try again.');
+      } finally {
+        setLoading(false);
+      }
     }
-};
+  };
 
-  // Function to handle user input change
+  // Handle user input change
   const handleInputChange = (e) => {
     setUserInput(e.target.value);
   };
@@ -82,7 +70,9 @@ const Chatbot = ({ pdfId, pdfContent, onClose }) => {
     <div style={styles.modalOverlay}>
       <div style={styles.chatContainer}>
         <div style={styles.header}>
-          <h5 style={styles.title}>Chat with PDF {pdfId}</h5>
+          <h5 style={styles.title}>
+            Chat with PDF: {syllabus?.syllabus_description || 'Untitled'}
+          </h5>
           <button style={styles.closeButton} onClick={onClose}>
             &times;
           </button>
@@ -90,11 +80,10 @@ const Chatbot = ({ pdfId, pdfContent, onClose }) => {
         <div style={styles.chatBody}>
           {messages.map((msg, index) => (
             <div
-              key={index} // Use index as a fallback key
+              key={index}
               style={msg.sender === 'user' ? styles.userMessage : styles.botMessage}
-            >
-              {msg.text}
-            </div>
+              dangerouslySetInnerHTML={{ __html: msg.text }} // Render HTML in the bot message
+            />
           ))}
           {loading && <div style={styles.loadingMessage}>Bot is typing...</div>}
           {error && <div style={styles.errorMessage}>{error}</div>}

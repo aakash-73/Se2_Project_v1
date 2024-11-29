@@ -25,7 +25,7 @@ def allowed_file(filename):
 
 
 def add_syllabus():
-    """Add a new syllabus, extract content, generate embeddings, and store the PDF file in GridFS."""
+    """Add a new syllabus and store the PDF file in GridFS."""
     try:
         username = session.get('username')
         if not username:
@@ -39,26 +39,14 @@ def add_syllabus():
         syllabus_description = request.form.get('syllabus_description')
         file = request.files.get('syllabus_pdf')
 
-        # Validate input fields and file type
-        if not (course_id and course_name and department_id and department_name and syllabus_description and file):
-            return jsonify({"error": "All fields are required"}), 400
-        if not allowed_file(file.filename):
-            return jsonify({"error": "The file must be a PDF"}), 400
+        # Validate input
+        if not (course_id and course_name and department_id and department_name and syllabus_description and file and allowed_file(file.filename)):
+            return jsonify({"error": "All fields are required, and the file must be a PDF"}), 400
 
-        # Store PDF file in GridFS
+        # Store file in GridFS
         pdf_file_id = fs.put(file, filename=file.filename, content_type='application/pdf')
 
-        # Extract content from the PDF file
-        pdf_content = extract_pdf_content(pdf_file_id)
-        if not pdf_content:
-            return jsonify({"error": "Failed to extract content from the PDF"}), 500
-
-        # Generate embeddings for the extracted content
-        embeddings = generate_embeddings(pdf_content)
-        if not embeddings:
-            return jsonify({"error": "Failed to generate embeddings for the PDF content"}), 500
-
-        # Save the syllabus information to MongoDB
+        # Create and save syllabus entry
         syllabus = Syllabus(
             course_id=course_id,
             course_name=course_name,
@@ -69,15 +57,10 @@ def add_syllabus():
             uploaded_by=username
         )
         syllabus.save()
-
-        # Add the document to the MongoDB vector store
-        vector_store.add_document(str(pdf_file_id), pdf_content, embeddings)
-
-        logging.info(f"Syllabus added successfully by user: {username}")
         return jsonify({"message": "Syllabus added successfully!", "pdf_file_id": str(pdf_file_id)}), 201
 
     except Exception as e:
-        logging.error(f"Failed to add syllabus: {str(e)}", exc_info=True)
+        print(f"[ERROR] Failed to add syllabus: {str(e)}")
         return jsonify({"error": f"Failed to add syllabus: {str(e)}"}), 500
 
 def get_professor_syllabi():

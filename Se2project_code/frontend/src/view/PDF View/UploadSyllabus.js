@@ -126,12 +126,12 @@ const UploadSyllabus = ({ syllabus, handleChange, resetForm, onUploadSuccess }) 
             </td>
           </tr>
           <tr>
-            <td>Syllabus Description</td>
+            <td>Title and Syllabus Description</td>
             <td>
               <textarea
                 name="syllabus_description"
                 className="form-control"
-                placeholder="Syllabus Description"
+                placeholder="Title and Syllabus Description"
                 value={syllabus.syllabus_description}
                 onChange={handleChange}
                 required
@@ -205,7 +205,7 @@ const styles = {
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)', // Darkened background overlay
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -213,38 +213,57 @@ const styles = {
   },
   floatingTab: {
     backgroundColor: '#fff',
-    borderRadius: '8px',
-    width: '85%', // Increased width
-    maxWidth: '800px',
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
-    animation: 'fadeIn 0.3s ease-in-out',
+    borderRadius: '20px',  // Rounded corners similar to your chatbot
+    width: '95%', // Make the modal width responsive
+    maxWidth: '1000px', // Maximum width for larger screens
+    height: '90%', // Occupy most of the height
+    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)', // Shadow for a more floating effect
+    display: 'flex',
+    flexDirection: 'column',
   },
   modalHeader: {
-    padding: '16px',
+    padding: '15px', // Reduced padding for a smaller title bar
     borderBottom: '1px solid #ddd',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   modalTitle: {
+    fontSize: '1.2rem', // Reduced font size for a smaller title
     margin: 0,
-    fontSize: '1.25rem',
   },
   close: {
     background: 'none',
     border: 'none',
-    fontSize: '1.5rem',
+    fontSize: '1.8rem', // Slightly smaller close button
     cursor: 'pointer',
+    color: '#333', // Ensure close button is visible
   },
   modalBody: {
-    padding: '16px',
+    flex: 1, // Allow the body to take up remaining space
+    overflowY: 'auto', // Scrollable if content overflows
+    padding: '20px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '20px',
   },
   modalFooter: {
-    padding: '16px',
+    padding: '20px',
     borderTop: '1px solid #ddd',
     display: 'flex',
     justifyContent: 'flex-end',
     gap: '10px', // Space between buttons
+  },
+  previewButton: {
+    padding: '20px 30px',
+    fontSize: '1.2rem',
+    backgroundColor: '#007bff',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '15px',
+    cursor: 'pointer',
+    boxShadow: '0 5px 15px rgba(0, 123, 255, 0.4)',
+    transition: 'background-color 0.3s',
   },
 };
 

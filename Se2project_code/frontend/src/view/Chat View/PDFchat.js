@@ -6,8 +6,10 @@ const PDFchat = ({ username }) => {
   const [courses, setCourses] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState('');
   const [syllabi, setSyllabi] = useState([]);
+  const [filteredSyllabi, setFilteredSyllabi] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [pdfFile, setPdfFile] = useState(null);
-  const [pdfId, setPdfId] = useState(null);
+  const [selectedPdf, setSelectedPdf] = useState(null);
   const [pdfContent, setPdfContent] = useState('');
   const [showPreview, setShowPreview] = useState(false);
   const [showChat, setShowChat] = useState(false);
@@ -48,6 +50,7 @@ const PDFchat = ({ username }) => {
       if (response.data && Array.isArray(response.data)) {
         const filteredSyllabi = response.data.filter((syllabus) => syllabus.course_name === courseName);
         setSyllabi(filteredSyllabi);
+        setFilteredSyllabi(filteredSyllabi); // Initialize filtered syllabi
       } else {
         console.error('Unexpected response data:', response.data);
       }
@@ -56,49 +59,59 @@ const PDFchat = ({ username }) => {
     }
   };
 
-  const handleViewPdf = async (pdfUrl, pdfId) => {
-    if (!pdfId) {
-        console.error('[ERROR] PDF ID is undefined or null.');
-        alert('Invalid PDF selection. Please try again.');
-        return;
+  // Handle search query input
+  const handleSearchChange = (e) => {
+    const query = e.target.value.toLowerCase();
+    setSearchQuery(query);
+
+    const filtered = syllabi.filter((syllabus) =>
+      syllabus.syllabus_description.toLowerCase().includes(query)
+    );
+    setFilteredSyllabi(filtered);
+  };
+
+  const handleViewPdf = async (pdfUrl, syllabus) => {
+    if (!syllabus || !syllabus.syllabus_pdf) {
+      console.error('[ERROR] PDF or syllabus is undefined.');
+      alert('Invalid PDF selection. Please try again.');
+      return;
     }
 
-    console.log('[DEBUG] Selected PDF ID:', pdfId);
+    console.log('[DEBUG] Selected PDF ID:', syllabus.syllabus_pdf);
     setPdfFile(`http://localhost:5000/get_pdf/${pdfUrl}`);
-    setPdfId(pdfId);
+    setSelectedPdf(syllabus); // Save selected syllabus
     setShowPreview(true);
     setShowChat(false);
 
     try {
-        console.log(`[DEBUG] Fetching PDF content for ID: ${pdfId}`);
-        const response = await axios.get(`http://localhost:5000/extract_pdf_content/${pdfId}`, { withCredentials: true });
+      console.log(`[DEBUG] Fetching PDF content for ID: ${syllabus.syllabus_pdf}`);
+      const response = await axios.get(
+        `http://localhost:5000/extract_pdf_content/${syllabus.syllabus_pdf}`,
+        { withCredentials: true }
+      );
 
-        console.log('[DEBUG] Full response:', response);
-        if (response.status === 200 && response.data.content) {
-            console.log('[DEBUG] PDF content successfully extracted.');
-            setPdfContent(response.data.content);
-        } else {
-            console.error('[ERROR] Failed to extract PDF content:', response.data);
-            setPdfContent('');
-            alert('Failed to load PDF content. Please try again.');
-        }
-    } catch (error) {
-        console.error('[ERROR] Error fetching PDF content:', error.response?.data || error.message);
+      if (response.status === 200 && response.data.content) {
+        console.log('[DEBUG] PDF content successfully extracted.');
+        setPdfContent(response.data.content);
+      } else {
+        console.error('[ERROR] Failed to extract PDF content:', response.data);
         setPdfContent('');
-        alert('Error loading PDF content. Please check the backend logs for more details.');
+        alert('Failed to load PDF content. Please try again.');
+      }
+    } catch (error) {
+      console.error('[ERROR] Error fetching PDF content:', error.response?.data || error.message);
+      setPdfContent('');
+      alert('Error loading PDF content. Please check the backend logs for more details.');
     }
-};
+  };
 
-  // Handle opening the chat window
   const handleOpenChat = () => {
-    console.log('[DEBUG] Opening chat with PDF content:', pdfContent);
     if (!pdfContent || pdfContent.trim() === '') {
       alert('PDF content could not be loaded. Please try again.');
       return;
     }
     setShowChat(true);
   };
-
 
   return (
     <div>
@@ -121,8 +134,22 @@ const PDFchat = ({ username }) => {
         </select>
       </div>
 
-      {/* Table for displaying syllabi of the selected course */}
-      {syllabi.length > 0 && (
+      {/* Search field */}
+      {selectedCourse && (
+        <div className="mb-4">
+          <label>Search PDFs:</label>
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Search by Title and Syllabus Description"
+            value={searchQuery}
+            onChange={handleSearchChange}
+          />
+        </div>
+      )}
+
+      {/* Table for displaying filtered syllabi */}
+      {filteredSyllabi.length > 0 && (
         <table className="table table-bordered">
           <thead>
             <tr>
@@ -135,7 +162,7 @@ const PDFchat = ({ username }) => {
             </tr>
           </thead>
           <tbody>
-            {syllabi.map((syllabus, index) => (
+            {filteredSyllabi.map((syllabus, index) => (
               <tr key={syllabus.syllabus_pdf || index}>
                 <td>{syllabus.course_id}</td>
                 <td>{syllabus.course_name}</td>
@@ -145,7 +172,7 @@ const PDFchat = ({ username }) => {
                 <td>
                   <button
                     className="btn btn-primary"
-                    onClick={() => handleViewPdf(syllabus.syllabus_pdf, syllabus.syllabus_pdf)}
+                    onClick={() => handleViewPdf(syllabus.syllabus_pdf, syllabus)}
                   >
                     Select
                   </button>
@@ -179,7 +206,14 @@ const PDFchat = ({ username }) => {
       )}
 
       {/* Chatbot floating window */}
-      {showChat && <Chatbot pdfId={pdfId} pdfContent={pdfContent} onClose={() => setShowChat(false)} />}
+      {showChat && (
+        <Chatbot
+          pdfId={selectedPdf?.syllabus_pdf}
+          pdfContent={pdfContent}
+          syllabus={selectedPdf}
+          onClose={() => setShowChat(false)}
+        />
+      )}
     </div>
   );
 };

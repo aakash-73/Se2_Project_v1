@@ -1,8 +1,7 @@
-// Login.js
 import React, { useState } from 'react';
 import axios from 'axios';
 
-function Login({ toggleSignUp, setIsLoggedIn, setUserType, setUsername }) {
+function Login({ toggleSignUp, setIsLoggedIn, setUserType, setUsername, setIsGuest }) {
   const [loginData, setLoginData] = useState({ username: '', password: '' });
 
   const handleChange = (e) => {
@@ -16,14 +15,23 @@ function Login({ toggleSignUp, setIsLoggedIn, setUserType, setUsername }) {
         alert(response.data.message);
         setIsLoggedIn(true);
         setUserType(response.data.user_type);
-        setUsername(response.data.username);  // Set the username
+        setUsername(response.data.username);
         localStorage.setItem('user_type', response.data.user_type);
-        localStorage.setItem('username', response.data.username);  // Store username
+        localStorage.setItem('username', response.data.username);
       })
       .catch((error) => {
         console.error("Login failed:", error.response?.data?.error || 'Failed to login');
         alert(error.response?.data?.error || 'Failed to login');
       });
+  };
+
+  const handleGuestLogin = () => {
+    setIsGuest(true);
+    setIsLoggedIn(true);
+    setUserType('guest');
+    setUsername('Guest');
+    localStorage.setItem('user_type', 'guest');
+    localStorage.setItem('username', 'Guest');
   };
 
   return (
@@ -35,7 +43,7 @@ function Login({ toggleSignUp, setIsLoggedIn, setUserType, setUsername }) {
             type="text" 
             name="username" 
             className="form-control" 
-            placeholder="Username or Email"  // Updated placeholder
+            placeholder="Username or Email"
             value={loginData.username} 
             onChange={handleChange} 
             required 
@@ -55,6 +63,9 @@ function Login({ toggleSignUp, setIsLoggedIn, setUserType, setUsername }) {
         <button type="submit" className="btn btn-primary btn-block">Login</button>
         <p className="mt-2 text-center">
           New user? <span className="text-primary" style={{ cursor: 'pointer' }} onClick={toggleSignUp}>Sign Up</span>
+        </p>
+        <p className="mt-2 text-center">
+          <span className="text-primary" style={{ cursor: 'pointer' }} onClick={handleGuestLogin}>Guest Login</span>
         </p>
       </form>
     </div>

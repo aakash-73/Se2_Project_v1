@@ -12,25 +12,42 @@ function Register({ toggleSignUp }) {
     user_type: ''
   });
 
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
   const handleChange = (e) => {
     setRegisterData({ ...registerData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setLoading(true);
+    setErrorMessage('');
+
     axios.post('http://localhost:5000/register', registerData)
       .then((response) => {
         alert(response.data.message);
-        toggleSignUp(); // Switch back to login after successful registration
+        setLoading(false);
+
+        // Automatically switch to login if not pending
+        if (response.status !== 202) {
+          toggleSignUp();
+        }
       })
       .catch((error) => {
-        alert(error.response?.data?.error || 'Failed to register');
+        setLoading(false);
+        setErrorMessage(error.response?.data?.error || 'Failed to register');
       });
   };
 
   return (
     <div className="card p-4">
       <h2 className="text-center">Sign Up</h2>
+      {errorMessage && (
+        <div className="alert alert-danger text-center">
+          {errorMessage}
+        </div>
+      )}
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <input
@@ -100,9 +117,22 @@ function Register({ toggleSignUp }) {
             <option value="professor">Professor</option>
           </select>
         </div>
-        <button type="submit" className="btn btn-primary btn-block">Register</button>
+        <button
+          type="submit"
+          className="btn btn-primary btn-block"
+          disabled={loading}
+        >
+          {loading ? 'Registering...' : 'Register'}
+        </button>
         <p className="mt-2 text-center">
-          Already have an account? <span className="text-primary" style={{ cursor: 'pointer' }} onClick={toggleSignUp}>Login</span>
+          Already have an account?{' '}
+          <span
+            className="text-primary"
+            style={{ cursor: 'pointer' }}
+            onClick={toggleSignUp}
+          >
+            Login
+          </span>
         </p>
       </form>
     </div>

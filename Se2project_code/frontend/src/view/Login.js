@@ -36,6 +36,7 @@ function Login({ toggleSignUp, setIsLoggedIn, setUserType, setUsername, setIsGue
 
   return (
     <div className="card p-4">
+      <h1 className="text-center">Welcome to Syllabus ChatBot</h1>
       <h2 className="text-center">Login</h2>
       <form onSubmit={handleSubmit}>
         <div className="form-group">

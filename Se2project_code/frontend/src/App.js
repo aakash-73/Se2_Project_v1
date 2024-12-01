@@ -14,6 +14,8 @@ import DeletePDF from './view/PDF View/DeletePDF';
 import Drawer from './view/Drawer View/Drawer';
 import UserList from './view/User View/UserList';
 import PDFchat from './view/Chat View/PDFchat';
+import RegistrationRequests from './view/User View/RegistrationRequests';
+
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -119,7 +121,7 @@ function App() {
       return (
         <>
           <h1 className="mt-4 mb-4 text-center">Registration Requests</h1>
-          <div></div>
+          <RegistrationRequests />
         </>
       );
     } else {

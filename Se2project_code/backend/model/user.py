@@ -8,3 +8,8 @@ class User(Document):
     password = StringField(required=True)
     user_type = StringField(required=True, choices=['student', 'professor'])
     email = StringField(required=True, unique=True)
+    status = StringField(default="pending", choices=["pending", "approved"])  # New field added
+
+    meta = {
+        'collection': 'users'  # Explicitly define the collection name (optional)
+    }

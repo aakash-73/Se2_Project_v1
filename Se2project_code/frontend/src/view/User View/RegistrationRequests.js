@@ -77,13 +77,13 @@ const RegistrationRequests = () => {
                     className="btn btn-success btn-sm me-2"
                     onClick={() => handleAccept(req.id)}
                   >
-                    Accept
+                    Approve
                   </button>
                   <button
                     className="btn btn-danger btn-sm"
                     onClick={() => handleReject(req.id)}
                   >
-                    Reject
+                    Decline
                   </button>
                 </td>
               </tr>

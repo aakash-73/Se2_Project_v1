@@ -63,12 +63,15 @@ const PDFchat = ({ username }) => {
   const handleSearchChange = (e) => {
     const query = e.target.value.toLowerCase();
     setSearchQuery(query);
-
+  
     const filtered = syllabi.filter((syllabus) =>
-      syllabus.syllabus_description.toLowerCase().includes(query)
+      syllabus.syllabus_description.toLowerCase().includes(query) ||
+      syllabus.course_id.toLowerCase().includes(query) ||
+      syllabus.professor.toLowerCase().includes(query)
     );
+  
     setFilteredSyllabi(filtered);
-  };
+  };  
 
   const handleViewPdf = async (pdfUrl, syllabus) => {
     if (!syllabus || !syllabus.syllabus_pdf) {
@@ -115,7 +118,7 @@ const PDFchat = ({ username }) => {
 
   return (
     <div>
-      <h2 className="mt-4">PDF Chat</h2>
+      <h2 className="mt-4" style={{ textAlign: "center" }}>Select a course and PDF to chat!</h2>
 
       {/* Dropdown for selecting course */}
       <div className="mb-4">
@@ -141,7 +144,7 @@ const PDFchat = ({ username }) => {
           <input
             type="text"
             className="form-control"
-            placeholder="Search by Title and Syllabus Description"
+            placeholder="Search by Id, Professor, and Syllabus Description"
             value={searchQuery}
             onChange={handleSearchChange}
           />

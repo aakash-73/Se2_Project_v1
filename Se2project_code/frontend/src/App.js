@@ -130,7 +130,7 @@ function App() {
           <h1 className="mt-4 mb-4 text-center">
             {userType.includes('professor') && !viewAsStudent
               ? `Welcome Professor ${username}`
-              : 'Welcome to Syllabus ChatBot'}
+              : `Welcome to Syllabus ChatBot, ${username}`}
           </h1>
           <button onClick={handleSignOut} className="btn btn-danger mb-4 float-right">Sign Out</button>
           {userType.includes('professor') && viewAsStudent ? (

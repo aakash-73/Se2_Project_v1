@@ -3,6 +3,7 @@ import axios from 'axios';
 
 function Login({ toggleSignUp, setIsLoggedIn, setUserType, setUsername, setIsGuest }) {
   const [loginData, setLoginData] = useState({ username: '', password: '' });
+  const [passwordVisible, setPasswordVisible] = useState(false);
 
   const handleChange = (e) => {
     setLoginData({ ...loginData, [e.target.name]: e.target.value });
@@ -50,9 +51,9 @@ function Login({ toggleSignUp, setIsLoggedIn, setUserType, setUsername, setIsGue
             required 
           />
         </div>
-        <div className="form-group">
+        <div className="form-group position-relative">
           <input 
-            type="password" 
+            type={passwordVisible ? "text" : "password"} 
             name="password" 
             className="form-control" 
             placeholder="Password" 
@@ -60,6 +61,21 @@ function Login({ toggleSignUp, setIsLoggedIn, setUserType, setUsername, setIsGue
             onChange={handleChange} 
             required 
           />
+          <span 
+            className="eye-icon" 
+            onClick={() => setPasswordVisible(!passwordVisible)} 
+            style={{
+              position: 'absolute',
+              right: '10px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              cursor: 'pointer',
+              color: 'gray',
+              fontSize: '1.2em',
+            }}
+          >
+            {passwordVisible ? '👁' : '👁️‍🗨️'}
+          </span>
         </div>
         <button type="submit" className="btn btn-primary btn-block">Login</button>
         <p className="mt-2 text-center">

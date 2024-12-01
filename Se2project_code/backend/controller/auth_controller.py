@@ -1,5 +1,5 @@
-from flask import jsonify, request, session
-from werkzeug.security import generate_password_hash, check_password_hash
+from flask import jsonify, request, session # type: ignore
+from werkzeug.security import generate_password_hash, check_password_hash # type: ignore
 from model.user import User
 import re
 

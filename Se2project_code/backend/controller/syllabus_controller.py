@@ -27,11 +27,12 @@ def allowed_file(filename):
 def add_syllabus():
     """Add a new syllabus and store the PDF file in GridFS."""
     try:
+        # Verify user session
         username = session.get('username')
         if not username:
             return jsonify({"error": "User is not logged in"}), 401
 
-        # Get form data
+        # Retrieve form data
         course_id = request.form.get('course_id')
         course_name = request.form.get('course_name')
         department_id = request.form.get('department_id')
@@ -39,14 +40,17 @@ def add_syllabus():
         syllabus_description = request.form.get('syllabus_description')
         file = request.files.get('syllabus_pdf')
 
-        # Validate input
-        if not (course_id and course_name and department_id and department_name and syllabus_description and file and allowed_file(file.filename)):
-            return jsonify({"error": "All fields are required, and the file must be a PDF"}), 400
+        # Validate input fields
+        if not all([course_id, course_name, department_id, department_name, syllabus_description, file]):
+            return jsonify({"error": "All fields are required."}), 400
 
-        # Store file in GridFS
+        if not allowed_file(file.filename):
+            return jsonify({"error": "Invalid file type. Only PDF files are allowed."}), 400
+
+        # Store the file in GridFS
         pdf_file_id = fs.put(file, filename=file.filename, content_type='application/pdf')
 
-        # Create and save syllabus entry
+        # Create and save the syllabus entry
         syllabus = Syllabus(
             course_id=course_id,
             course_name=course_name,
@@ -57,11 +61,25 @@ def add_syllabus():
             uploaded_by=username
         )
         syllabus.save()
-        return jsonify({"message": "Syllabus added successfully!", "pdf_file_id": str(pdf_file_id)}), 201
+
+        # Success response
+        return jsonify({
+            "message": "Syllabus added successfully!",
+            "pdf_file_id": str(pdf_file_id),
+            "course_id": course_id,
+            "course_name": course_name
+        }), 201
+
+    except gridfs.errors.GridFSError as gridfs_error:
+        # Handle specific GridFS errors
+        print(f"[ERROR] GridFS error: {str(gridfs_error)}")
+        return jsonify({"error": "Failed to store the file. Please try again later."}), 500
 
     except Exception as e:
-        print(f"[ERROR] Failed to add syllabus: {str(e)}")
-        return jsonify({"error": f"Failed to add syllabus: {str(e)}"}), 500
+        # General exception handling
+        print(f"[ERROR] Unexpected error in add_syllabus: {str(e)}")
+        return jsonify({"error": "An unexpected error occurred. Please try again later."}), 500
+
 
 def get_professor_syllabi():
     """Retrieve syllabi uploaded by a specific professor."""

@@ -1,4 +1,3 @@
-// src/view/Register.js
 import React, { useState } from 'react';
 import axios from 'axios';
 
@@ -14,15 +13,47 @@ function Register({ toggleSignUp }) {
 
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
 
   const handleChange = (e) => {
     setRegisterData({ ...registerData, [e.target.name]: e.target.value });
+  };
+
+  const validatePassword = (password) => {
+    const lengthRequirement = password.length >= 8;
+    const uppercaseRequirement = /[A-Z]/.test(password);
+    const specialCharRequirement = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+    if (!lengthRequirement) {
+      return 'Password must be at least 8 characters long.';
+    }
+    if (!uppercaseRequirement) {
+      return 'Password must contain at least one uppercase letter.';
+    }
+    if (!specialCharRequirement) {
+      return 'Password must contain at least one special character.';
+    }
+    return '';
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setLoading(true);
     setErrorMessage('');
+
+    const passwordError = validatePassword(registerData.password);
+    if (passwordError) {
+      setErrorMessage(passwordError);
+      setLoading(false);
+      return;
+    }
+
+    if (registerData.password !== registerData.confirm_password) {
+      setErrorMessage('Passwords do not match.');
+      setLoading(false);
+      return;
+    }
 
     axios.post('http://localhost:5000/register', registerData)
       .then((response) => {
@@ -82,9 +113,9 @@ function Register({ toggleSignUp }) {
             required
           />
         </div>
-        <div className="form-group">
+        <div className="form-group position-relative">
           <input
-            type="password"
+            type={passwordVisible ? 'text' : 'password'}
             name="password"
             className="form-control"
             placeholder="Password"
@@ -92,10 +123,25 @@ function Register({ toggleSignUp }) {
             onChange={handleChange}
             required
           />
+          <span
+            className="eye-icon"
+            onClick={() => setPasswordVisible(!passwordVisible)}
+            style={{
+              position: 'absolute',
+              right: '10px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              cursor: 'pointer',
+              color: 'gray',
+              fontSize: '1.2em',
+            }}
+          >
+            {passwordVisible ? '👁' : '👁️‍🗨️'}
+          </span>
         </div>
-        <div className="form-group">
+        <div className="form-group position-relative">
           <input
-            type="password"
+            type={confirmPasswordVisible ? 'text' : 'password'}
             name="confirm_password"
             className="form-control"
             placeholder="Confirm Password"
@@ -103,6 +149,21 @@ function Register({ toggleSignUp }) {
             onChange={handleChange}
             required
           />
+          <span
+            className="eye-icon"
+            onClick={() => setConfirmPasswordVisible(!confirmPasswordVisible)}
+            style={{
+              position: 'absolute',
+              right: '10px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              cursor: 'pointer',
+              color: 'gray',
+              fontSize: '1.2em',
+            }}
+          >
+            {confirmPasswordVisible ? '👁' : '👁️‍🗨️'}
+          </span>
         </div>
         <div className="form-group">
           <select

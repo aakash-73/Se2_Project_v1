@@ -12,7 +12,6 @@ const StudentUpdate = ({ studentId, onUpdateSuccess, onCancel }) => {
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState('');
 
-  // Fetch the student's current details
   useEffect(() => {
     const fetchStudent = async () => {
       try {
@@ -29,13 +28,11 @@ const StudentUpdate = ({ studentId, onUpdateSuccess, onCancel }) => {
     if (studentId) fetchStudent();
   }, [studentId]);
 
-  // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setStudent((prevStudent) => ({ ...prevStudent, [name]: value }));
   };
 
-  // Submit the updated student data
   const handleUpdate = async (e) => {
     e.preventDefault();
     setUpdating(true);
@@ -44,7 +41,7 @@ const StudentUpdate = ({ studentId, onUpdateSuccess, onCancel }) => {
     try {
       await axios.put(`http://localhost:5000/students/${studentId}`, student, { withCredentials: true });
       alert("Student updated successfully!");
-      onUpdateSuccess(); // Refresh list or close update modal on success
+      onUpdateSuccess();
     } catch (error) {
       console.error("Error updating student:", error);
       setError("Failed to update student.");

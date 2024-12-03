@@ -7,7 +7,6 @@ const Chatbot = ({ pdfId, pdfContent, onClose, syllabus }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Function to send user message and get bot response
   const handleSendMessage = async () => {
     if (userInput.trim()) {
       const newMessages = [...messages, { sender: 'user', text: userInput }];
@@ -17,11 +16,9 @@ const Chatbot = ({ pdfId, pdfContent, onClose, syllabus }) => {
       setError(null);
 
       try {
-        // Prepare payload for the request
         const payload = { message: userInput, pdfId, pdfContent };
         console.log("[DEBUG] Sending payload to backend:", payload);
 
-        // Send POST request to the backend
         const response = await axios.post(
           'http://localhost:5000/chatbot/chat_with_pdf',
           payload,
@@ -31,12 +28,10 @@ const Chatbot = ({ pdfId, pdfContent, onClose, syllabus }) => {
           }
         );
 
-        // Check response status
         if (response.status === 200) {
           const botResponse = response.data.response.replace(/\n/g, '<br />') || 'No response from the bot.';
           console.log("[DEBUG] Bot response received:", botResponse);
 
-          // Update messages with bot response
           setMessages((prevMessages) => [
             ...prevMessages,
             { sender: 'bot', text: botResponse },
@@ -61,7 +56,6 @@ const Chatbot = ({ pdfId, pdfContent, onClose, syllabus }) => {
     }
   };
 
-  // Handle user input change
   const handleInputChange = (e) => {
     setUserInput(e.target.value);
   };
@@ -82,7 +76,7 @@ const Chatbot = ({ pdfId, pdfContent, onClose, syllabus }) => {
             <div
               key={index}
               style={msg.sender === 'user' ? styles.userMessage : styles.botMessage}
-              dangerouslySetInnerHTML={{ __html: msg.text }} // Render HTML in the bot message
+              dangerouslySetInnerHTML={{ __html: msg.text }} 
             />
           ))}
           {loading && <div style={styles.loadingMessage}>Bot is typing...</div>}

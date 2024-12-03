@@ -1,6 +1,6 @@
 from datetime import timedelta
-from flask import Flask, request, jsonify, make_response
-from flask_cors import CORS, cross_origin
+from flask import Flask, request, jsonify, make_response # type: ignore
+from flask_cors import CORS, cross_origin # type: ignore
 from controller.studentuser_controller import studentuser_controller
 from controller.professoruser_controller import professoruser_controller
 from controller.chatbot_controller import chatbot_controller
@@ -10,18 +10,14 @@ from controller import auth_controller, syllabus_controller
 from groq import Groq
 import logging
 
-# Initialize Flask application
 app = Flask(__name__)
 app.config.from_object(Config)
 app.secret_key = '199d3cc197e2211649ac7c405c23d53cdf94ba9442ca726f'
 
-# Initialize CORS with specific configurations
 CORS(app, supports_credentials=True, origins=["http://localhost:3000"])
 
-# Set session lifetime
 app.permanent_session_lifetime = timedelta(days=1)
 
-# Enable debug-level logging
 logging.basicConfig(level=logging.DEBUG)
 
 def check_groq_connection():
@@ -47,18 +43,15 @@ def health_check():
     }
     return jsonify(status), 200 if groq_ai_status else 500
 
-# Home route
 @app.route('/')
 def home():
     """Home endpoint."""
     logging.debug("[DEBUG] Home endpoint called.")
     return "Welcome to the Syllabus Chatbot API!"
 
-# Authentication routes
 app.add_url_rule('/register', 'register', auth_controller.register, methods=['POST'])
 app.add_url_rule('/login', 'login', auth_controller.login, methods=['POST'])
 
-# Syllabus routes
 app.add_url_rule('/add_syllabus', 'add_syllabus', syllabus_controller.add_syllabus, methods=['POST'])
 app.add_url_rule('/syllabi', 'get_professor_syllabi', syllabus_controller.get_professor_syllabi, methods=['GET'])
 app.add_url_rule('/syllabi/all', 'get_syllabi', syllabus_controller.get_syllabi, methods=['GET'])
@@ -68,15 +61,12 @@ app.add_url_rule('/update_syllabus/<pdf_id>', 'update_syllabus', syllabus_contro
 app.add_url_rule('/delete_syllabus/<pdf_id>', 'delete_syllabus', syllabus_controller.delete_syllabus, methods=['DELETE'])
 app.add_url_rule('/extract_pdf_content/<pdf_id>', 'extract_pdf_content', syllabus_controller.extract_pdf_content, methods=['GET'])
 
-# Registration request routes
 app.register_blueprint(registration_request_controller, url_prefix='/registration_requests')
 
-# Register blueprints for student, professor, and chatbot controllers
 app.register_blueprint(studentuser_controller, url_prefix='/students')
 app.register_blueprint(professoruser_controller, url_prefix='/professors')
 app.register_blueprint(chatbot_controller, url_prefix='/chatbot')
 
-# Handle OPTIONS requests for CORS preflight
 @app.before_request
 def handle_options():
     if request.method == "OPTIONS":
@@ -88,20 +78,16 @@ def handle_options():
         response.headers["Access-Control-Allow-Credentials"] = "true"
         return response, 200
 
-# Error handling for unexpected server errors
 @app.errorhandler(500)
 def internal_server_error(e):
     logging.error(f"[ERROR] Internal server error: {e}")
     return jsonify({"error": "An unexpected internal server error occurred."}), 500
 
-# Error handling for 404 Not Found
 @app.errorhandler(404)
 def not_found_error(e):
     logging.warning(f"[WARNING] Resource not found: {e}")
     return jsonify({"error": "The requested resource was not found."}), 404
 
-
-# Run the Flask application
 if __name__ == "__main__":
     logging.info("[INFO] Starting Flask server on http://localhost:5000")
     app.run(debug=True, host="0.0.0.0", port=5000)

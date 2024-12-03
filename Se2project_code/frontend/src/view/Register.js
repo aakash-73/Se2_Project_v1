@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-function Register({ toggleSignUp }) {
+function Register({ toggleSignUp, toggleLogin }) {
   const [registerData, setRegisterData] = useState({
     first_name: '',
     last_name: '',
@@ -15,6 +15,41 @@ function Register({ toggleSignUp }) {
   const [errorMessage, setErrorMessage] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
+
+  const inputFields = [
+    { name: 'first_name', type: 'text', placeholder: 'First Name', required: true },
+    { name: 'last_name', type: 'text', placeholder: 'Last Name', required: true },
+    { name: 'email', type: 'email', placeholder: 'Email', required: true },
+    {
+      name: 'password',
+      type: passwordVisible ? 'text' : 'password',
+      placeholder: 'Password',
+      required: true,
+      toggleVisibility: () => setPasswordVisible(!passwordVisible),
+      isPassword: true,
+      visibilityIcon: passwordVisible ? '👁' : '👁️‍🗨️'
+    },
+    {
+      name: 'confirm_password',
+      type: confirmPasswordVisible ? 'text' : 'password',
+      placeholder: 'Confirm Password',
+      required: true,
+      toggleVisibility: () => setConfirmPasswordVisible(!confirmPasswordVisible),
+      isPassword: true,
+      visibilityIcon: confirmPasswordVisible ? '👁' : '👁️‍🗨️'
+    },
+    {
+      name: 'user_type',
+      type: 'select',
+      placeholder: 'Select User Type',
+      required: true,
+      options: [
+        { value: '', label: 'Select User Type' },
+        { value: 'student', label: 'Student' },
+        { value: 'professor', label: 'Professor' }
+      ]
+    }
+  ];
 
   const handleChange = (e) => {
     setRegisterData({ ...registerData, [e.target.name]: e.target.value });
@@ -37,7 +72,7 @@ function Register({ toggleSignUp }) {
     return '';
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setErrorMessage('');
@@ -55,20 +90,25 @@ function Register({ toggleSignUp }) {
       return;
     }
 
-    axios.post('http://localhost:5000/register', registerData)
-      .then((response) => {
-        alert(response.data.message);
-        setLoading(false);
+    try {
+      const response = await axios.post('http://localhost:5000/register', registerData);
 
-        // Automatically switch to login if not pending
-        if (response.status !== 202) {
-          toggleSignUp();
-        }
-      })
-      .catch((error) => {
-        setLoading(false);
-        setErrorMessage(error.response?.data?.error || 'Failed to register');
+      alert(response.data.message);
+
+      setRegisterData({
+        first_name: '',
+        last_name: '',
+        email: '',
+        password: '',
+        confirm_password: '',
+        user_type: ''
       });
+      toggleLogin();
+    } catch (error) {
+      setErrorMessage(error.response?.data?.error || 'Failed to register');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -80,104 +120,58 @@ function Register({ toggleSignUp }) {
         </div>
       )}
       <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <input
-            type="text"
-            name="first_name"
-            className="form-control"
-            placeholder="First Name"
-            value={registerData.first_name}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <input
-            type="text"
-            name="last_name"
-            className="form-control"
-            placeholder="Last Name"
-            value={registerData.last_name}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <input
-            type="email"
-            name="email"
-            className="form-control"
-            placeholder="Email"
-            value={registerData.email}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="form-group position-relative">
-          <input
-            type={passwordVisible ? 'text' : 'password'}
-            name="password"
-            className="form-control"
-            placeholder="Password"
-            value={registerData.password}
-            onChange={handleChange}
-            required
-          />
-          <span
-            className="eye-icon"
-            onClick={() => setPasswordVisible(!passwordVisible)}
-            style={{
-              position: 'absolute',
-              right: '10px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              cursor: 'pointer',
-              color: 'gray',
-              fontSize: '1.2em',
-            }}
-          >
-            {passwordVisible ? '👁' : '👁️‍🗨️'}
-          </span>
-        </div>
-        <div className="form-group position-relative">
-          <input
-            type={confirmPasswordVisible ? 'text' : 'password'}
-            name="confirm_password"
-            className="form-control"
-            placeholder="Confirm Password"
-            value={registerData.confirm_password}
-            onChange={handleChange}
-            required
-          />
-          <span
-            className="eye-icon"
-            onClick={() => setConfirmPasswordVisible(!confirmPasswordVisible)}
-            style={{
-              position: 'absolute',
-              right: '10px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              cursor: 'pointer',
-              color: 'gray',
-              fontSize: '1.2em',
-            }}
-          >
-            {confirmPasswordVisible ? '👁' : '👁️‍🗨️'}
-          </span>
-        </div>
-        <div className="form-group">
-          <select
-            name="user_type"
-            className="form-control"
-            value={registerData.user_type}
-            onChange={handleChange}
-            required
-          >
-            <option value="">Select User Type</option>
-            <option value="student">Student</option>
-            <option value="professor">Professor</option>
-          </select>
-        </div>
+        {inputFields.map((field, index) => {
+          if (field.type === 'select') {
+            return (
+              <div className="form-group" key={index}>
+                <select
+                  name={field.name}
+                  className="form-control"
+                  value={registerData[field.name]}
+                  onChange={handleChange}
+                  required={field.required}
+                >
+                  {field.options.map((option, idx) => (
+                    <option key={idx} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            );
+          }
+
+          return (
+            <div className="form-group position-relative" key={index}>
+              <input
+                type={field.type}
+                name={field.name}
+                className="form-control"
+                placeholder={field.placeholder}
+                value={registerData[field.name]}
+                onChange={handleChange}
+                required={field.required}
+              />
+              {field.isPassword && (
+                <span
+                  className="eye-icon"
+                  onClick={field.toggleVisibility}
+                  style={{
+                    position: 'absolute',
+                    right: '10px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    cursor: 'pointer',
+                    color: 'gray',
+                    fontSize: '1.2em',
+                  }}
+                >
+                  {field.visibilityIcon}
+                </span>
+              )}
+            </div>
+          );
+        })}
         <button
           type="submit"
           className="btn btn-primary btn-block"
@@ -190,7 +184,7 @@ function Register({ toggleSignUp }) {
           <span
             className="text-primary"
             style={{ cursor: 'pointer' }}
-            onClick={toggleSignUp}
+            onClick={toggleLogin}
           >
             Login
           </span>

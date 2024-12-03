@@ -1,17 +1,16 @@
 // ProfessorList.js
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import ProfessorUpdate from './ProfessorUpdate';  // Import ProfessorUpdate component
+import ProfessorUpdate from './ProfessorUpdate';  
 
 const ProfessorList = () => {
   const [professors, setProfessors] = useState([]);
-  const [professorToEdit, setProfessorToEdit] = useState(null); // Track the professor to edit
+  const [professorToEdit, setProfessorToEdit] = useState(null);
 
   useEffect(() => {
     fetchProfessors();
   }, []);
 
-  // Fetch all professors
   const fetchProfessors = async () => {
     try {
       const response = await axios.get('http://localhost:5000/professors', { withCredentials: true });
@@ -21,7 +20,6 @@ const ProfessorList = () => {
     }
   };
 
-  // Handle delete operation with confirmation
   const handleDelete = async (professorId) => {
     const confirmDelete = window.confirm("Are you sure you want to delete this professor?");
     if (!confirmDelete) return;
@@ -29,7 +27,7 @@ const ProfessorList = () => {
     try {
       await axios.delete(`http://localhost:5000/professors/${professorId}`, { withCredentials: true });
       alert("Professor deleted successfully");
-      fetchProfessors(); // Refresh list after deletion
+      fetchProfessors();
     } catch (error) {
       console.error("Error deleting professor:", error);
       alert("Failed to delete professor");
@@ -56,7 +54,7 @@ const ProfessorList = () => {
               <td>{professor.email}</td>
               <td>
                 <button
-                  onClick={() => setProfessorToEdit(professor)}  // Open the update modal
+                  onClick={() => setProfessorToEdit(professor)}
                   className="btn btn-warning btn-sm"
                   style={{ marginRight: '20px' }}
                 >
@@ -74,16 +72,15 @@ const ProfessorList = () => {
         </tbody>
       </table>
 
-      {/* Render ProfessorUpdate modal when a professor is selected for editing */}
       {professorToEdit && (
         <ProfessorUpdate
           professorId={professorToEdit.id}
           initialData={professorToEdit}
           onUpdateSuccess={() => {
-            fetchProfessors(); // Refresh list after update
-            setProfessorToEdit(null); // Close the update modal
+            fetchProfessors();
+            setProfessorToEdit(null);
           }}
-          onCancel={() => setProfessorToEdit(null)} // Close the modal without saving
+          onCancel={() => setProfessorToEdit(null)}
         />
       )}
     </div>

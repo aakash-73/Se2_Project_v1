@@ -1,10 +1,9 @@
 # professoruser_controller.py
 from flask import Blueprint, jsonify, request
-from model.user import User  # Import the User model
+from model.user import User 
 
 professoruser_controller = Blueprint('professoruser_controller', __name__, url_prefix='/professors')
 
-# Route to get all professor users
 @professoruser_controller.route('/', methods=['GET'])
 def get_professors():
     try:
@@ -22,7 +21,6 @@ def get_professors():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Route to get a single professor by ID
 @professoruser_controller.route('/<professor_id>', methods=['GET'])
 def get_professor(professor_id):
     try:
@@ -34,13 +32,12 @@ def get_professor(professor_id):
             "first_name": professor.first_name,
             "last_name": professor.last_name,
             "email": professor.email,
-            "user_type": professor.user_type  # Include any additional fields
+            "user_type": professor.user_type 
         }
         return jsonify(professor_data), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Route to update a professor user
 @professoruser_controller.route('/<professor_id>', methods=['PUT'])
 def update_professor(professor_id):
     data = request.json
@@ -49,7 +46,6 @@ def update_professor(professor_id):
         if not professor:
             return jsonify({"error": "Professor not found"}), 404
 
-        # Update fields if provided in the request data
         if 'first_name' in data:
             professor.first_name = data['first_name']
         if 'last_name' in data:
@@ -62,7 +58,6 @@ def update_professor(professor_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Route to delete a professor user
 @professoruser_controller.route('/<professor_id>', methods=['DELETE'])
 def delete_professor(professor_id):
     try:

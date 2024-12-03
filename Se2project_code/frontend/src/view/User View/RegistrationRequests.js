@@ -6,7 +6,6 @@ const RegistrationRequests = () => {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
 
-  // Fetch pending registration requests
   useEffect(() => {
     axios.get('http://localhost:5000/registration_requests')
       .then((response) => {
@@ -19,24 +18,22 @@ const RegistrationRequests = () => {
       });
   }, []);
 
-  // Accept a registration request
   const handleAccept = (id) => {
     axios.post(`http://localhost:5000/registration_requests/${id}/accept`)
       .then(() => {
         alert('Request accepted');
-        setRequests(requests.filter((req) => req.id !== id)); // Remove accepted request from the list
+        setRequests(requests.filter((req) => req.id !== id));
       })
       .catch(() => {
         alert('Failed to accept request');
       });
   };
 
-  // Reject a registration request
   const handleReject = (id) => {
     axios.delete(`http://localhost:5000/registration_requests/${id}/reject`)
       .then(() => {
         alert('Request rejected');
-        setRequests(requests.filter((req) => req.id !== id)); // Remove rejected request from the list
+        setRequests(requests.filter((req) => req.id !== id));
       })
       .catch(() => {
         alert('Failed to reject request');

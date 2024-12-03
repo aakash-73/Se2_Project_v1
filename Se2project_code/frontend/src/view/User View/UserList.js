@@ -6,12 +6,11 @@ import ProfessorList from './ProfessorList';
 const UserList = ({ onReturn, handleSignOut }) => {
   const [view, setView] = useState(localStorage.getItem('userListView') || null);
 
-  // Update localStorage whenever the view changes
   useEffect(() => {
     if (view) {
       localStorage.setItem('userListView', view);
     } else {
-      localStorage.removeItem('userListView'); // Remove if returning to the initial view
+      localStorage.removeItem('userListView');
     }
   }, [view]);
 

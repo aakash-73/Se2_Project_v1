@@ -12,7 +12,6 @@ const ProfessorUpdate = ({ professorId, onUpdateSuccess, onCancel }) => {
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState('');
 
-  // Fetch the professor's current details
   useEffect(() => {
     const fetchProfessor = async () => {
       try {
@@ -29,13 +28,11 @@ const ProfessorUpdate = ({ professorId, onUpdateSuccess, onCancel }) => {
     if (professorId) fetchProfessor();
   }, [professorId]);
 
-  // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setProfessor((prevProfessor) => ({ ...prevProfessor, [name]: value }));
   };
 
-  // Submit the updated professor data
   const handleUpdate = async (e) => {
     e.preventDefault();
     setUpdating(true);
@@ -44,8 +41,7 @@ const ProfessorUpdate = ({ professorId, onUpdateSuccess, onCancel }) => {
     try {
       await axios.put(`http://localhost:5000/professors/${professorId}`, professor, { withCredentials: true });
       alert("Professor updated successfully!");
-      onUpdateSuccess(); // Refresh list or close update modal on success
-    } catch (error) {
+      onUpdateSuccess();
       console.error("Error updating professor:", error);
       setError("Failed to update professor.");
     } finally {

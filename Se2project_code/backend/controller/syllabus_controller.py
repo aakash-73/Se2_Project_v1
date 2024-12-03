@@ -12,10 +12,8 @@ from controller.chatbot_controller import CustomMongoDBVectorStore, embedding_mo
 import logging
 import numpy as np
 
-# Initialize the embedding model
 embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
 
-# MongoDB collection for embeddings
 embeddings_collection = db["embeddings"]
 
 vector_store = CustomMongoDBVectorStore(collection=collection, embedding_function=embedding_model)
@@ -27,12 +25,10 @@ def allowed_file(filename):
 def add_syllabus():
     """Add a new syllabus and store the PDF file in GridFS."""
     try:
-        # Verify user session
         username = session.get('username')
         if not username:
             return jsonify({"error": "User is not logged in"}), 401
 
-        # Retrieve form data
         course_id = request.form.get('course_id')
         course_name = request.form.get('course_name')
         department_id = request.form.get('department_id')
@@ -40,17 +36,14 @@ def add_syllabus():
         syllabus_description = request.form.get('syllabus_description')
         file = request.files.get('syllabus_pdf')
 
-        # Validate input fields
         if not all([course_id, course_name, department_id, department_name, syllabus_description, file]):
             return jsonify({"error": "All fields are required."}), 400
 
         if not allowed_file(file.filename):
             return jsonify({"error": "Invalid file type. Only PDF files are allowed."}), 400
 
-        # Store the file in GridFS
         pdf_file_id = fs.put(file, filename=file.filename, content_type='application/pdf')
 
-        # Create and save the syllabus entry
         syllabus = Syllabus(
             course_id=course_id,
             course_name=course_name,
@@ -62,7 +55,6 @@ def add_syllabus():
         )
         syllabus.save()
 
-        # Success response
         return jsonify({
             "message": "Syllabus added successfully!",
             "pdf_file_id": str(pdf_file_id),
@@ -71,12 +63,10 @@ def add_syllabus():
         }), 201
 
     except gridfs.errors.GridFSError as gridfs_error:
-        # Handle specific GridFS errors
         print(f"[ERROR] GridFS error: {str(gridfs_error)}")
         return jsonify({"error": "Failed to store the file. Please try again later."}), 500
 
     except Exception as e:
-        # General exception handling
         print(f"[ERROR] Unexpected error in add_syllabus: {str(e)}")
         return jsonify({"error": "An unexpected error occurred. Please try again later."}), 500
 
@@ -139,11 +129,10 @@ def get_pdf_file(pdf_id):
 def get_single_syllabus(pdf_id):
     """Retrieve a single syllabus by its PDF ID."""
     try:
-        # Check if the pdf_id is a valid ObjectId
         if not ObjectId.is_valid(pdf_id):
             return jsonify({"error": "Invalid syllabus ID"}), 400
 
-        syllabus = Syllabus.objects(syllabus_pdf=pdf_id).first()  # Match by `syllabus_pdf` field
+        syllabus = Syllabus.objects(syllabus_pdf=pdf_id).first()  
         if not syllabus:
             return jsonify({"error": "Syllabus not found"}), 404
 
@@ -272,10 +261,8 @@ def similarity_search(pdf_id, user_query, top_k=5):
     try:
         print(f"[DEBUG] Performing similarity search for PDF ID: {pdf_id}")
 
-        # Generate embedding for the user query
         query_embedding = embedding_model.encode(user_query, convert_to_numpy=True)
 
-        # Retrieve embeddings from MongoDB
         embeddings = list(embeddings_collection.find({"pdf_id": pdf_id}))
         scores = []
 
@@ -284,7 +271,6 @@ def similarity_search(pdf_id, user_query, top_k=5):
             score = np.dot(query_embedding, sentence_embedding) / (np.linalg.norm(query_embedding) * np.linalg.norm(sentence_embedding))
             scores.append((item["sentence"], score))
 
-        # Sort sentences by similarity score
         top_sentences = sorted(scores, key=lambda x: x[1], reverse=True)[:top_k]
         context = "\n".join([s[0] for s in top_sentences])
 

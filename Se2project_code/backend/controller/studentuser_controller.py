@@ -2,10 +2,8 @@ from flask import Blueprint, jsonify, request
 from config import db
 from model.user import User
 
-# Define the blueprint
 studentuser_controller = Blueprint('studentuser_controller', __name__)
 
-# Route to get all student users
 @studentuser_controller.route('/', methods=['GET'])
 def get_students():
     try:
@@ -23,7 +21,6 @@ def get_students():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Route to get a specific student user by ID
 @studentuser_controller.route('/<student_id>', methods=['GET'])
 def get_student(student_id):
     try:
@@ -41,7 +38,6 @@ def get_student(student_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Route to update a student user
 @studentuser_controller.route('/<student_id>', methods=['PUT'])
 def update_student(student_id):
     data = request.json
@@ -55,7 +51,6 @@ def update_student(student_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Route to delete a student user
 @studentuser_controller.route('/<student_id>', methods=['DELETE'])
 def delete_student(student_id):
     try:

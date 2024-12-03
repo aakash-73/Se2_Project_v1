@@ -1,7 +1,7 @@
-from bson import ObjectId
+from bson import ObjectId # type: ignore
 from config import fs
 
-pdf_id = "6727db474114faf5e4ab5993"  # Replace with your actual PDF ID
+pdf_id = "6727db474114faf5e4ab5993"
 
 try:
     file_data = fs.get(ObjectId(pdf_id))

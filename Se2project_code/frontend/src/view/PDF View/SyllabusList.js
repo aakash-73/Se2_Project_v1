@@ -75,7 +75,6 @@ const SyllabusList = () => {
     <div>
       <h2 className="mt-4">Uploaded Syllabi</h2>
 
-      {/* Search Field */}
       <div className="mb-3">
         <input
           type="text"

@@ -7,8 +7,8 @@ const DeletePDF = ({ pdfId, handleClose, onDeleteSuccess }) => {
     try {
       await axios.delete(`http://localhost:5000/delete_syllabus/${pdfId}`, { withCredentials: true });
       alert('Syllabus deleted successfully!');
-      onDeleteSuccess();  // Refresh list after delete
-      handleClose();      // Close the modal
+      onDeleteSuccess();  
+      handleClose();     
     } catch (error) {
       console.error("Error deleting syllabus:", error);
       alert('Failed to delete syllabus.');

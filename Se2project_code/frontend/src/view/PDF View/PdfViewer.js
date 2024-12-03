@@ -5,7 +5,6 @@ const PdfViewer = ({ pdfId, handleClose }) => {
 
   useEffect(() => {
     if (pdfId) {
-      // Construct the PDF URL based on the provided ID
       setPdfUrl(`http://localhost:5000/get_pdf/${pdfId}`);
     }
   }, [pdfId]);

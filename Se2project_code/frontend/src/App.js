@@ -74,6 +74,7 @@ function App() {
     setUserType('');
     setViewAsStudent(false);
     setSyllabi([]);
+    setSyllabus({});
     setSelectedPdf(null);
     setAdminView(null);
     setIsGuest(false);
@@ -82,7 +83,8 @@ function App() {
     localStorage.removeItem('adminView');
   };
 
-  const toggleSignUp = () => setIsSignUp((prev) => !prev);
+  const toggleSignUp = () => setIsSignUp(true);
+  const toggleLogin = () => setIsSignUp(false);
 
   const toggleViewMode = () => setViewAsStudent((prev) => !prev);
 
@@ -191,7 +193,7 @@ function App() {
     <div className="container mt-5">
       {!isLoggedIn ? (
         isSignUp ? (
-          <Register toggleSignUp={toggleSignUp} />
+          <Register toggleSignUp={toggleSignUp} toggleLogin={toggleLogin} />
         ) : (
           <Login
             toggleSignUp={toggleSignUp}

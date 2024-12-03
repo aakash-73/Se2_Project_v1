@@ -55,7 +55,7 @@ const StudentList = () => {
               <td>
                 <button
                   onClick={() => setStudentToEdit(student)}
-                  className="btn btn-warning btn-sm me-3" // Larger spacing with me-3
+                  className="btn btn-warning btn-sm me-3"
                 >
                   Update
                 </button>

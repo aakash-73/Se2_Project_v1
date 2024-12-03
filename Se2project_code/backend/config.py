@@ -1,7 +1,7 @@
 import os
 import logging
-from mongoengine import connect
-import gridfs
+from mongoengine import connect # type: ignore
+import gridfs # type: ignore
 
 # Set logging level to reduce PyMongo debug noise
 logging.getLogger("pymongo").setLevel(logging.WARNING)

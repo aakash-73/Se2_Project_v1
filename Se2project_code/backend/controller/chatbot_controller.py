@@ -5,19 +5,12 @@ import numpy as np
 import requests
 import logging
 
-# Importing the syllabus_controller
-# from controller.syllabus_controller import extract_pdf_content
-
-# Initialize Flask Blueprint for the chatbot controller
 chatbot_controller = Blueprint('chatbot_controller', __name__)
 
-# MongoDB Collection and Database Configuration
 collection = db["pdf_embeddings"] if db is not None else None
 
-# Initialize Embedding Model
 embedding_model = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
-# Custom MongoDB Vector Store Class
 class CustomMongoDBVectorStore:
     def __init__(self, collection, embedding_function):
         self.collection = collection
@@ -67,13 +60,11 @@ class CustomMongoDBVectorStore:
             logging.error(f"[ERROR] Cosine similarity calculation failed: {e}")
             return 0.0
 
-# Initialize Custom MongoDB Vector Store
 if collection is not None:
     vector_store = CustomMongoDBVectorStore(collection=collection, embedding_function=embedding_model)
 else:
     raise Exception("MongoDB connection failed, 'pdf_embeddings' collection not found.")
 
-# Custom conversation memory to keep track of the chat history
 class ConversationMemory:
     def __init__(self):
         self.messages = []
@@ -84,25 +75,20 @@ class ConversationMemory:
     def get_context(self):
         return " ".join([msg["message"] for msg in self.messages])
 
-# Initialize memory
 memory = ConversationMemory()
 @chatbot_controller.route('/chat_with_pdf', methods=['POST'])
 def chat_with_pdf():
     try:
-        # Parse input data
         data = request.json
         user_message = data.get("message")
-        pdf_content = data.get("pdfContent")  # Directly pass the PDF content
+        pdf_content = data.get("pdfContent")
 
-        # Input validation
         if not user_message or not pdf_content:
             logging.error("[ERROR] Missing required parameters.")
             return jsonify({"error": "Missing required parameters (message and pdfContent)."}), 400
 
-        # Step 1: Prepare the prompt
         prompt = f"PDF Content:\n{pdf_content}\n\nUser Message: {user_message}"
 
-        # Step 2: Generate response using the external chatbot API
         api_url = "http://csai01:8000/generate/"
         payload = {
             "prompt": prompt,
@@ -117,7 +103,6 @@ def chat_with_pdf():
             logging.error(f"[ERROR] API call failed with status code {response.status_code}: {response.text}")
             return jsonify({"error": "Failed to generate response using the external API."}), 500
         print(bot_response)
-        # Return the bot's response
         return jsonify({"response": bot_response}), 200
 
     except Exception as e:

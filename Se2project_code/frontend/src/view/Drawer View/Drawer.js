@@ -16,9 +16,9 @@ const Drawer = ({ isOpen, onClose, onOptionSelect, email, options }) => {
           <li
             key={index}
             className="list-group-item"
-            onClick={() => onOptionSelect(option.value)} // Pass the value to onOptionSelect
+            onClick={() => onOptionSelect(option.value)}
           >
-            {option.label} {/* Display the label here */}
+            {option.label}
           </li>
         ))}
       </ul>

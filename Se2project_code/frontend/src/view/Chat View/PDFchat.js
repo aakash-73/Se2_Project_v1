@@ -14,7 +14,7 @@ const PDFchat = ({ username }) => {
   const [showPreview, setShowPreview] = useState(false);
   const [showChat, setShowChat] = useState(false);
 
-  // Fetch courses on component mount
+
   useEffect(() => {
     const fetchCourses = async () => {
       try {
@@ -37,7 +37,7 @@ const PDFchat = ({ username }) => {
     fetchCourses();
   }, [username]);
 
-  // Handle course selection
+
   const handleCourseSelect = async (e) => {
     const courseName = e.target.value;
     setSelectedCourse(courseName);
@@ -50,7 +50,7 @@ const PDFchat = ({ username }) => {
       if (response.data && Array.isArray(response.data)) {
         const filteredSyllabi = response.data.filter((syllabus) => syllabus.course_name === courseName);
         setSyllabi(filteredSyllabi);
-        setFilteredSyllabi(filteredSyllabi); // Initialize filtered syllabi
+        setFilteredSyllabi(filteredSyllabi); 
       } else {
         console.error('Unexpected response data:', response.data);
       }
@@ -59,19 +59,20 @@ const PDFchat = ({ username }) => {
     }
   };
 
-  // Handle search query input
+
   const handleSearchChange = (e) => {
     const query = e.target.value.toLowerCase();
     setSearchQuery(query);
-  
+
     const filtered = syllabi.filter((syllabus) =>
-      syllabus.syllabus_description.toLowerCase().includes(query) ||
-      syllabus.course_id.toLowerCase().includes(query) ||
-      syllabus.professor.toLowerCase().includes(query)
+        syllabus.syllabus_description.toLowerCase().includes(query) ||
+        syllabus.course_id.toLowerCase().includes(query) ||
+        syllabus.professor.toLowerCase().includes(query) ||
+        syllabus.department_name.toLowerCase().includes(query)
     );
-  
+
     setFilteredSyllabi(filtered);
-  };  
+};
 
   const handleViewPdf = async (pdfUrl, syllabus) => {
     if (!syllabus || !syllabus.syllabus_pdf) {
@@ -82,7 +83,7 @@ const PDFchat = ({ username }) => {
 
     console.log('[DEBUG] Selected PDF ID:', syllabus.syllabus_pdf);
     setPdfFile(`http://localhost:5000/get_pdf/${pdfUrl}`);
-    setSelectedPdf(syllabus); // Save selected syllabus
+    setSelectedPdf(syllabus);
     setShowPreview(true);
     setShowChat(false);
 
@@ -120,7 +121,6 @@ const PDFchat = ({ username }) => {
     <div>
       <h2 className="mt-4" style={{ textAlign: "center" }}>Select a course and PDF to chat!</h2>
 
-      {/* Dropdown for selecting course */}
       <div className="mb-4">
         <label>Select Course:</label>
         <select
@@ -137,21 +137,19 @@ const PDFchat = ({ username }) => {
         </select>
       </div>
 
-      {/* Search field */}
       {selectedCourse && (
         <div className="mb-4">
           <label>Search PDFs:</label>
           <input
             type="text"
             className="form-control"
-            placeholder="Search by Id, Professor, and Syllabus Description"
+            placeholder="Search by Id, Professor, Department, and Syllabus Description"
             value={searchQuery}
             onChange={handleSearchChange}
           />
         </div>
       )}
 
-      {/* Table for displaying filtered syllabi */}
       {filteredSyllabi.length > 0 && (
         <table className="table table-bordered">
           <thead>
@@ -186,7 +184,6 @@ const PDFchat = ({ username }) => {
         </table>
       )}
 
-      {/* PDF Preview and Chat Button */}
       {showPreview && (
         <div style={styles.modalOverlay}>
           <div style={styles.floatingTab}>
@@ -208,7 +205,6 @@ const PDFchat = ({ username }) => {
         </div>
       )}
 
-      {/* Chatbot floating window */}
       {showChat && (
         <Chatbot
           pdfId={selectedPdf?.syllabus_pdf}
@@ -221,7 +217,7 @@ const PDFchat = ({ username }) => {
   );
 };
 
-// Styles for modal overlay and PDF preview
+
 const styles = {
   modalOverlay: {
     position: 'fixed',

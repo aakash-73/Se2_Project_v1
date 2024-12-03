@@ -8,12 +8,11 @@ const EditPDF = ({ pdfId, handleClose, onUpdateSuccess }) => {
   const [newFilePreview, setNewFilePreview] = useState(null);
 
   useEffect(() => {
-    // Fetch the current syllabus details
     const fetchSyllabus = async () => {
       try {
         const response = await axios.get(`http://localhost:5000/syllabus/${pdfId}`, { withCredentials: true });
         setSyllabus(response.data);
-        console.log("Syllabus fetched for editing:", response.data);  // Debug log
+        console.log("Syllabus fetched for editing:", response.data);
       } catch (error) {
         console.error("Error fetching syllabus data:", error);
       }
@@ -46,11 +45,10 @@ const EditPDF = ({ pdfId, handleClose, onUpdateSuccess }) => {
     formData.append('department_name', syllabus.department_name);
     formData.append('syllabus_description', syllabus.syllabus_description);
 
-    // If a new file is chosen, append it to the form data
     if (fileInputRef.current.files[0]) {
       formData.append('syllabus_pdf', fileInputRef.current.files[0]);
     } else {
-      formData.append('syllabus_pdf', syllabus.syllabus_pdf); // Keep existing file if no new file is chosen
+      formData.append('syllabus_pdf', syllabus.syllabus_pdf);
     }
 
     try {
@@ -59,8 +57,8 @@ const EditPDF = ({ pdfId, handleClose, onUpdateSuccess }) => {
         withCredentials: true,
       });
       alert('Syllabus updated successfully!');
-      if (typeof onUpdateSuccess === "function") onUpdateSuccess();  // Refresh list after update if function is defined
-      if (typeof handleClose === "function") handleClose();      // Close the modal if function is defined
+      if (typeof onUpdateSuccess === "function") onUpdateSuccess();  
+      if (typeof handleClose === "function") handleClose();
     } catch (error) {
       console.error("Error updating syllabus:", error);
       alert('Failed to update syllabus.');
@@ -119,7 +117,6 @@ const EditPDF = ({ pdfId, handleClose, onUpdateSuccess }) => {
                 className="form-control mb-2"
               />
 
-              {/* Conditional PDF Preview */}
               {newFilePreview ? (
                 <div className="mb-3">
                   <label>New PDF Preview:</label>
@@ -139,7 +136,6 @@ const EditPDF = ({ pdfId, handleClose, onUpdateSuccess }) => {
                 )
               )}
 
-              {/* File Upload Input */}
               <div className="mb-3">
                 <label>Upload New PDF (optional):</label>
                 <input
